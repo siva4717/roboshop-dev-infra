@@ -135,6 +135,12 @@ resource "aws_instance" "mysql" {
     )
 }
 
+resource "aws_iam_role" "EC2SSMParameterRead" {
+  name = "EC2SSMParameterRead"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
+}
+
+
 resource "aws_iam_instance_profile" "mysql" {
   name = "mysql"
   role = "EC2SSMParameterRead"
