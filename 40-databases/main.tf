@@ -135,15 +135,34 @@ resource "aws_instance" "mysql" {
     )
 }
 
+# Create trust policy that allows EC2 to assume this role
+data "aws_iam_policy_document" "ec2_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+# Create the IAM role for EC2
 resource "aws_iam_role" "EC2SSMParameterRead" {
-  name = "EC2SSMParameterRead"
+  name               = "EC2SSMParameterRead"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
 
+# (Optional) Attach AmazonSSMManagedInstanceCore policy so EC2 can use SSM
+resource "aws_iam_role_policy_attachment" "ssm_core_attach" {
+  role       = aws_iam_role.EC2SSMParameterRead.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
 
+# Attach the role to your instance profile
 resource "aws_iam_instance_profile" "mysql" {
   name = "mysql"
-  role = "EC2SSMParameterRead"
+  role = aws_iam_role.EC2SSMParameterRead.name
 }
 
 resource "terraform_data" "mysql" {
