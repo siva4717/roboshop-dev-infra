@@ -87,9 +87,9 @@ resource "aws_launch_template" "catalogue" {
 
   instance_initiated_shutdown_behavior = "terminate"
   instance_type = "t3.micro"
-
+  
   vpc_security_group_ids = [local.catalogue_sg_id]
-
+  update_default_version = true 
   # tags attached to the instance
   tag_specifications {
     resource_type = "instance"
@@ -133,12 +133,24 @@ resource "aws_autoscaling_group" "catalogue" {
   health_check_type         = "ELB"
   desired_capacity          = 1
   force_delete              = false
+
+
+
   launch_template {
     id      = aws_launch_template.catalogue.id
     version = aws_launch_template.catalogue.latest_version
   }
   vpc_zone_identifier       = local.private_subnet_ids
   target_group_arns = [aws_lb_target_group.catalogue.arn]
+
+
+  instance_refresh {
+    strategy = "Rolling"
+  preferences {
+    min_healthy_percentage = 50
+  }
+  triggers = ["launch_template"]
+  }
   
   dynamic "tag" {  # we will get the iterator with name as tag
     for_each = merge(

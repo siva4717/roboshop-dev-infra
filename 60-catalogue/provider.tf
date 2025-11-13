@@ -9,7 +9,7 @@ terraform {
 
   backend "s3" {
     bucket = "msgd-remote-state-terraform"
-    key    = "vpc-module-demo"
+    key    = "catalogue"
     region = "us-east-1"
     use_lockfile = true
     encrypt = true
